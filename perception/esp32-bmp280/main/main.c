@@ -27,10 +27,11 @@
 
 /* HTTP Constants that aren't configurable in menuconfig */
 #define WEB_PATH "/measurement"
+#define KEY "12345678"
 
 static const char *TAG = "temp_collector";
 
-static char *BODY = "id="DEVICE_ID"&t=%0.2f&h=%0.2f";
+static char *BODY = "id="DEVICE_ID"&key="KEY"&t=%0.2f&h=%0.2f";
 
 static char *REQUEST_POST = "POST "WEB_PATH" HTTP/1.0\r\n"
     "Host: "API_IP_PORT"\r\n"
