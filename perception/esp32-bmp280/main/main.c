@@ -27,18 +27,22 @@
 
 /* HTTP Constants that aren't configurable in menuconfig */
 #define WEB_PATH "/measurement"
+#define WEB_PATH_DEVICE "/device"
 
 static const char *TAG = "temp_collector";
 
 static char *BODY = "id="DEVICE_ID"&key="DEVICE_KEY"&t=%0.2f&h=%0.2f&p=%0.2f";
+static char *BODY_DEVICE = "id="DEVICE_ID"&n="DEVICE_NAME"&k="DEVICE_KEY;
 
-static char *REQUEST_POST = "POST "WEB_PATH" HTTP/1.0\r\n"
+static char *REQUEST_POST = "POST %s HTTP/1.0\r\n"
     "Host: "API_IP_PORT"\r\n"
     "User-Agent: "USER_AGENT"\r\n"
     "Content-Type: application/x-www-form-urlencoded\r\n"
     "Content-Length: %d\r\n"
     "\r\n"
     "%s";
+
+static bool device_auth = false;
 
 static void http_get_task(void *pvParameters)
 {
@@ -69,19 +73,25 @@ static void http_get_task(void *pvParameters)
 
 
     while(1) {
-        if (bmp280_read_float(&dev, &temperature, &pressure, &humidity) != ESP_OK) {
+       if(device_auth==false){
+         sprintf(body, BODY_DEVICE);
+         sprintf(send_buf, REQUEST_POST, WEB_PATH_DEVICE,(int)strlen(body),body);
+       }
+       else{
+       if (bmp280_read_float(&dev, &temperature, &pressure, &humidity) != ESP_OK) {
             ESP_LOGI(TAG, "Temperature/pressure reading failed\n");
         } else {
             ESP_LOGI(TAG, "Pressure: %.2f Pa, Temperature: %.2f C", pressure, temperature);
 //            if (bme280p) {
                 ESP_LOGI(TAG,", Humidity: %.2f\n", humidity);
                 sprintf(body, BODY, temperature , humidity, pressure );
-                sprintf(send_buf, REQUEST_POST, (int)strlen(body),body );
+                sprintf(send_buf, REQUEST_POST, WEB_PATH ,(int)strlen(body),body );
 //	    } else {
 //                sprintf(send_buf, REQUEST_POST, temperature , 0);
 //            }
 	    ESP_LOGI(TAG,"sending: \n%s\n",send_buf);
-        }    
+        }
+       } 
 
         int err = getaddrinfo(API_IP, API_PORT, &hints, &res);
 
@@ -122,6 +132,10 @@ static void http_get_task(void *pvParameters)
             close(s);
             vTaskDelay(4000 / portTICK_PERIOD_MS);
             continue;
+        }else{
+           if(device_auth==false){
+            device_auth=true;
+           }
         }
         ESP_LOGI(TAG, "... socket send success");
 
