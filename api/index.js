@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const {MongoClient} = require("mongodb");
 const PgMem = require("pg-mem");
-
+const fs = require("fs");
 const db = PgMem.newDb();
 
     const render = require("./render.js");
@@ -49,9 +49,32 @@ app.post('/measurement', function (req, res) {
 
 app.post('/device', function (req, res) {
 	console.log("device id    : " + req.body.id + " name        : " + req.body.n + " key         : " + req.body.k );
+try{
+const devices_aux = db.public.query("SELECT * FROM devices");
+const devices= devices_aux.rows;
+let flag_device_reg=false;
+for (let i = 0; i < devices.length; i++) {
+ 
+  console.log(devices[i].name);
+  if(req.body.n==devices[i].name){
+   flag_device_reg=true;
+   break;
+}
+ 
+}
 
+   if(flag_device_reg==false){
     db.public.none("INSERT INTO devices VALUES ('"+req.body.id+ "', '"+req.body.n+"', '"+req.body.k+"')");
 	res.send("received new device");
+   console.log("Nuevo dispositivo registrado");
+   }
+   else{
+   res.send("ya registrado");
+   console.log("Dispositivo ya registrado");
+  }
+} catch(error){
+ console.error(error);
+}
 });
 
 
@@ -123,13 +146,65 @@ startDatabase().then(async() => {
     console.log("mongo measurement database Up");
 
     db.public.none("CREATE TABLE devices (device_id VARCHAR, name VARCHAR, key VARCHAR)");
-    db.public.none("INSERT INTO devices VALUES ('00', 'Fake Device 00', '123456')");
-    db.public.none("INSERT INTO devices VALUES ('01', 'Fake Device 01', '234567')");
+   // db.public.none("INSERT INTO devices VALUES ('00', 'Fake Device 00', '123456')");
+   // db.public.none("INSERT INTO devices VALUES ('01', 'Fake Device 01', '234567')");
     db.public.none("CREATE TABLE users (user_id VARCHAR, name VARCHAR, key VARCHAR)");
     db.public.none("INSERT INTO users VALUES ('1','Ana','admin123')");
     db.public.none("INSERT INTO users VALUES ('2','Beto','user123')");
 
-    console.log("sql device database up");
+   // console.log("sql device database up");
+
+
+try {
+  // reading a JSON file synchronously
+ /* const data = fs.readFileSync("data.json");
+  const user = JSON.parse(data);
+  console.log(user);
+  let now= new Date();
+  user["fecha"] = now.toLocaleString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires'
+  });
+  fs.writeFileSync("data.json", JSON.stringify(user, null, 2));
+*/
+const data = fs.readFileSync("data.json");
+const list_devices = JSON.parse(data);
+ console.log(list_devices);
+
+for (let number in list_devices){
+   const device=list_devices[number];
+
+   const device_id = device.device_id;
+   const name = device.name;
+   const key = device.key;
+   console.log(device_id);
+   console.log(name);
+   console.log(key);
+  
+   const add_device = "INSERT INTO devices (device_id, name, key) VALUES ('" + device_id + "', '" + name + "', '" + key + "')";
+
+  db.public.none(add_device);
+
+
+
+}
+
+} catch (error) {
+  // logging the error
+  console.error(error);
+
+  throw error;
+}
+console.log("sql device database up");
+// parsing the JSON content
+//const user = JSON.parse(data);
+
+// logging the content read from a file
+//console.log(user);
+
+/*let now= new Date();
+console.log('Fecha local:', now.toLocaleString('es-AR', {
+  timeZone: 'America/Argentina/Buenos_Aires'}));  
+*/
 
     app.listen(PORT, () => {
         console.log(`Listening at ${PORT}`);
