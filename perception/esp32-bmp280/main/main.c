@@ -23,6 +23,7 @@
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
 #include <bmp280.h>
+#include "dht.h"
 #include "../config.h"
 
 /* HTTP Constants that aren't configurable in menuconfig */
@@ -31,16 +32,20 @@
 
 static const char *TAG = "temp_collector";
 
-static char *BODY = "id="DEVICE_ID"&key="DEVICE_KEY"&t=%0.2f&h=%0.2f&p=%0.2f";
-static char *BODY_DEVICE = "id="DEVICE_ID"&n="DEVICE_NAME"&k="DEVICE_KEY;
+static char *BODY = "id=" DEVICE_ID "&key=" DEVICE_KEY "&t=%0.2f&h=%0.2f&p=%0.2f";
+static char *BODY_DEVICE = "id=" DEVICE_ID "&n=" DEVICE_NAME "&k=" DEVICE_KEY;
+
+static const gpio_num_t dht_gpio = ONE_WIRE_GPIO;
+
+static const dht_sensor_type_t sensor_type = DHT_TYPE_DHT11;
 
 static char *REQUEST_POST = "POST %s HTTP/1.0\r\n"
-    "Host: "API_IP_PORT"\r\n"
-    "User-Agent: "USER_AGENT"\r\n"
-    "Content-Type: application/x-www-form-urlencoded\r\n"
-    "Content-Length: %d\r\n"
-    "\r\n"
-    "%s";
+                            "Host: " API_IP_PORT "\r\n"
+                            "User-Agent: " USER_AGENT "\r\n"
+                            "Content-Type: application/x-www-form-urlencoded\r\n"
+                            "Content-Length: %d\r\n"
+                            "\r\n"
+                            "%s";
 
 static bool device_auth = false;
 
@@ -70,32 +75,51 @@ static void http_get_task(void *pvParameters)
     ESP_LOGI(TAG, "BMP280: found %s\n", bme280p ? "BME280" : "BMP280");
 
     float pressure, temperature, humidity;
+    int16_t temperature_dht11 = 0;
+    int16_t humidity_dht11 = 0;
 
-
-    while(1) {
-       if(device_auth==false){
-         sprintf(body, BODY_DEVICE);
-         sprintf(send_buf, REQUEST_POST, WEB_PATH_DEVICE,(int)strlen(body),body);
-       }
-       else{
-       if (bmp280_read_float(&dev, &temperature, &pressure, &humidity) != ESP_OK) {
-            ESP_LOGI(TAG, "Temperature/pressure reading failed\n");
-        } else {
-            ESP_LOGI(TAG, "Pressure: %.2f Pa, Temperature: %.2f C", pressure, temperature);
-//            if (bme280p) {
-                ESP_LOGI(TAG,", Humidity: %.2f\n", humidity);
-                sprintf(body, BODY, temperature , humidity, pressure );
-                sprintf(send_buf, REQUEST_POST, WEB_PATH ,(int)strlen(body),body );
-//	    } else {
-//                sprintf(send_buf, REQUEST_POST, temperature , 0);
-//            }
-	    ESP_LOGI(TAG,"sending: \n%s\n",send_buf);
+    while (1)
+    {
+        if (device_auth == false)
+        {
+            sprintf(body, BODY_DEVICE);
+            sprintf(send_buf, REQUEST_POST, WEB_PATH_DEVICE, (int)strlen(body), body);
         }
-       } 
+        else
+        {
+            if (bmp280_read_float(&dev, &temperature, &pressure, &humidity) != ESP_OK)
+            {
+                ESP_LOGI(TAG, "Temperature/pressure reading failed\n");
+            }
+            else
+            {
+                ESP_LOGI(TAG, "BMP280 - Pressure: %.2f Pa, Temperature: %.2f C", pressure, temperature);
+                //            if (bme280p) {
+                ESP_LOGI(TAG, ", Humidity: %.2f\n", humidity);
+                sprintf(body, BODY, temperature, humidity, pressure);
+                sprintf(send_buf, REQUEST_POST, WEB_PATH, (int)strlen(body), body);
+                //	    } else {
+                //                sprintf(send_buf, REQUEST_POST, temperature , 0);
+                //            }
+                ESP_LOGI(TAG, "sending: \n%s\n", send_buf);
+            }
+            if (dht_read_data(sensor_type, dht_gpio, &humidity_dht11, &temperature_dht11) == ESP_OK)
+            {
+                ESP_LOGI(TAG, "DHT11 - Humidity: %d%% Temp: %dC\n", humidity_dht11 / 10, temperature_dht11 / 10);
+                // sprintf(body, BODY, (float) temperature_dht11/10  , (float) humidity_dht11/10);
+                // sprintf(send_buf, REQUEST_POST, (int)strlen(body),body );
+                // ESP_LOGI(TAG,"sending: \n%s\n",send_buf);
+            }
+            else
+            {
+                ESP_LOGI(TAG, "Could not read data from sensor\n");
+            }
+        }
 
         int err = getaddrinfo(API_IP, API_PORT, &hints, &res);
 
-        if(err != 0 || res == NULL) {
+        if (err != 0 || res == NULL)
+        {
             ESP_LOGE(TAG, "DNS lookup failed err=%d res=%p", err, res);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             continue;
@@ -108,7 +132,8 @@ static void http_get_task(void *pvParameters)
         ESP_LOGI(TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
 
         s = socket(res->ai_family, res->ai_socktype, 0);
-        if(s < 0) {
+        if (s < 0)
+        {
             ESP_LOGE(TAG, "... Failed to allocate socket.");
             freeaddrinfo(res);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -116,7 +141,8 @@ static void http_get_task(void *pvParameters)
         }
         ESP_LOGI(TAG, "... allocated socket");
 
-        if(connect(s, res->ai_addr, res->ai_addrlen) != 0) {
+        if (connect(s, res->ai_addr, res->ai_addrlen) != 0)
+        {
             ESP_LOGE(TAG, "... socket connect failed errno=%d", errno);
             close(s);
             freeaddrinfo(res);
@@ -127,15 +153,19 @@ static void http_get_task(void *pvParameters)
         ESP_LOGI(TAG, "... connected");
         freeaddrinfo(res);
 
-        if (write(s, send_buf, strlen(send_buf)) < 0) {
+        if (write(s, send_buf, strlen(send_buf)) < 0)
+        {
             ESP_LOGE(TAG, "... socket send failed");
             close(s);
             vTaskDelay(4000 / portTICK_PERIOD_MS);
             continue;
-        }else{
-           if(device_auth==false){
-            device_auth=true;
-           }
+        }
+        else
+        {
+            if (device_auth == false)
+            {
+                device_auth = true;
+            }
         }
         ESP_LOGI(TAG, "... socket send success");
 
@@ -143,7 +173,8 @@ static void http_get_task(void *pvParameters)
         receiving_timeout.tv_sec = 5;
         receiving_timeout.tv_usec = 0;
         if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &receiving_timeout,
-                sizeof(receiving_timeout)) < 0) {
+                       sizeof(receiving_timeout)) < 0)
+        {
             ESP_LOGE(TAG, "... failed to set socket receiving timeout");
             close(s);
             vTaskDelay(4000 / portTICK_PERIOD_MS);
@@ -152,18 +183,21 @@ static void http_get_task(void *pvParameters)
         ESP_LOGI(TAG, "... set socket receiving timeout success");
 
         /* Read HTTP response */
-        do {
+        do
+        {
             bzero(recv_buf, sizeof(recv_buf));
-            r = read(s, recv_buf, sizeof(recv_buf)-1);
-            for(int i = 0; i < r; i++) {
+            r = read(s, recv_buf, sizeof(recv_buf) - 1);
+            for (int i = 0; i < r; i++)
+            {
                 putchar(recv_buf[i]);
             }
-        } while(r > 0);
+        } while (r > 0);
 
         ESP_LOGI(TAG, "... done reading from socket. Last read return=%d errno=%d.", r, errno);
         close(s);
 
-        for(int countdown = 10; countdown >= 0; countdown--) {
+        for (int countdown = 10; countdown >= 0; countdown--)
+        {
             ESP_LOGI(TAG, "%d... ", countdown);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
@@ -173,7 +207,7 @@ static void http_get_task(void *pvParameters)
 
 void app_main(void)
 {
-    ESP_ERROR_CHECK( nvs_flash_init() );
+    ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(i2cdev_init());
