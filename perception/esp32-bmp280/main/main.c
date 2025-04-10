@@ -32,7 +32,7 @@
 
 static const char *TAG = "temp_collector";
 
-static char *BODY = "id=" DEVICE_ID "&key=" DEVICE_KEY "&t=%0.2f&h=%0.2f&p=%0.2f";
+static char *BODY = "id=" DEVICE_ID "&key=" DEVICE_KEY "&t=%0.2f&h=%0.2f&p=%0.2f&t_dht11=%d&h_dht11=%d";
 static char *BODY_DEVICE = "id=" DEVICE_ID "&n=" DEVICE_NAME "&k=" DEVICE_KEY;
 
 static const gpio_num_t dht_gpio = ONE_WIRE_GPIO;
@@ -58,10 +58,10 @@ static void http_get_task(void *pvParameters)
     struct addrinfo *res;
     struct in_addr *addr;
     int s, r;
-    char body[64];
+    char body[128];
     char recv_buf[64];
 
-    char send_buf[256];
+    char send_buf[350];
 
     bmp280_params_t params;
     bmp280_init_default_params(&params);
@@ -80,12 +80,7 @@ static void http_get_task(void *pvParameters)
 
     while (1)
     {
-        if (device_auth == false)
-        {
-            sprintf(body, BODY_DEVICE);
-            sprintf(send_buf, REQUEST_POST, WEB_PATH_DEVICE, (int)strlen(body), body);
-        }
-        else
+        if  (device_auth == true)
         {
             if (bmp280_read_float(&dev, &temperature, &pressure, &humidity) != ESP_OK)
             {
@@ -96,8 +91,8 @@ static void http_get_task(void *pvParameters)
                 ESP_LOGI(TAG, "BMP280 - Pressure: %.2f Pa, Temperature: %.2f C", pressure, temperature);
                 //            if (bme280p) {
                 ESP_LOGI(TAG, ", Humidity: %.2f\n", humidity);
-                sprintf(body, BODY, temperature, humidity, pressure);
-                sprintf(send_buf, REQUEST_POST, WEB_PATH, (int)strlen(body), body);
+                //sprintf(body, BODY, temperature, humidity, pressure);
+                //sprintf(send_buf, REQUEST_POST, WEB_PATH, (int)strlen(body), body);
                 //	    } else {
                 //                sprintf(send_buf, REQUEST_POST, temperature , 0);
                 //            }
@@ -152,6 +147,16 @@ static void http_get_task(void *pvParameters)
 
         ESP_LOGI(TAG, "... connected");
         freeaddrinfo(res);
+
+        if(device_auth==false){
+            sprintf(body, BODY_DEVICE);
+            sprintf(send_buf, REQUEST_POST, WEB_PATH_DEVICE, (int)strlen(body), body);
+        }
+        else{
+            sprintf(body, BODY, temperature, humidity, pressure, temperature_dht11/10, humidity_dht11/10);
+            sprintf(send_buf, REQUEST_POST, WEB_PATH, (int)strlen(body), body);
+        }
+        
 
         if (write(s, send_buf, strlen(send_buf)) < 0)
         {

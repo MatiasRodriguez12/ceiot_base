@@ -44,8 +44,8 @@ const PORT = 8080;
 let id_measurement = 0;
 
 app.post('/measurement', function (req, res) {
-    -       console.log("device id    : " + req.body.id + " key         : " + req.body.key + " temperature : " + req.body.t + " humidity    : " + req.body.h + "   pressure: " + req.body.p);
-    const { insertedId } = insertMeasurement({ id: req.body.id, t: req.body.t, h: req.body.h, p: req.body.p });
+    -       console.log("device id: " + req.body.id + "  key: " + req.body.key + "  temperature: " + req.body.t + "  humidity: " + req.body.h + "  pressure: " + req.body.p + "  temperature_dht11: " + req.body.t_dht11 + "  humidity_dht11: " + req.body.h_dht11);
+    const { insertedId } = insertMeasurement({ id: req.body.id, t: req.body.t, h: req.body.h, p: req.body.p ,t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11});
     
     let data = {};
     if (fs.existsSync("data.json")) {
@@ -54,7 +54,7 @@ app.post('/measurement', function (req, res) {
         id_measurement++;
     }
 
-    let new_measurement = {id: req.body.id, t: req.body.t, h: req.body.h, p: req.body.p };
+    let new_measurement = {id: req.body.id, t: req.body.t, h: req.body.h, p: req.body.p ,t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11};
     
     data[id_measurement]=new_measurement;
     fs.writeFileSync("data.json", JSON.stringify(data, null, 2));
@@ -183,7 +183,7 @@ startDatabase().then(async () => {
 
         const data = fs.readFileSync("data.json");
         const list_data = JSON.parse(data);
-        console.log(list_data);
+        //console.log(list_data);
 
         for (let index in list_data) {
             const measurenment = list_data[index];
@@ -192,17 +192,19 @@ startDatabase().then(async () => {
 
             const t = measurenment.t;
             const h = measurenment.h;
+            const t_dht11 = measurenment.t_dht11;
+            const h_dht11 = measurenment.h_dht11;
 
             if(id=="esp32"){
                 const p = measurenment.p;
-                await insertMeasurement({ id: id, t: t, h: h, p: p });
+                await insertMeasurement({ id: id, t: t, h: h, p: p ,t_dht11: t_dht11, h_dht11: h_dht11 });
             } else{
                 await insertMeasurement({ id: id, t: t, h: h });
             }
             
-            console.log(id);
-            console.log(t);
-            console.log(h);
+            //console.log(id);
+            //console.log(t);
+            //console.log(h);
 
             //const add_device = "INSERT INTO devices (device_id, name, key) VALUES ('" + device_id + "', '" + name + "', '" + key + "')";
             // db.public.none(add_device);
