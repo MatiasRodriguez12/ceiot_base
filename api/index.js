@@ -45,23 +45,26 @@ let id_measurement = 0;
 
 app.post('/measurement', function (req, res) {
     -       console.log("device id: " + req.body.id + "  key: " + req.body.key + "  temperature: " + req.body.t + "  humidity: " + req.body.h + "  pressure: " + req.body.p + "  temperature_dht11: " + req.body.t_dht11 + "  humidity_dht11: " + req.body.h_dht11);
-    
-    let now= new Date();
-    let fecha = now.toLocaleString('es-AR', {timeZone: 'America/Argentina/Buenos_Aires'});
-    
-    const { insertedId } = insertMeasurement({ id: req.body.id, t: req.body.t, h: req.body.h, p: req.body.p, t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11, fecha: fecha});
 
-    let data = {};
+    let now = new Date();
+    let fecha = now.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+
+    const { insertedId } = insertMeasurement({ id: req.body.id, t_bmp280: req.body.t, h_bmp280: req.body.h, p_bmp280: req.body.p, t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11, fecha: fecha });
+
+    let measurenment = {};
     if (fs.existsSync("data.json")) {
-        const file = fs.readFileSync("data.json");
-        data = JSON.parse(file);
-        id_measurement++;
+        const data = fs.readFileSync("data.json", "utf-8");
+
+        if (data.trim() !== "") {
+            measurenment = JSON.parse(data);
+            id_measurement++;
+        }
     }
 
-    let new_measurement = { id: req.body.id, t: req.body.t, h: req.body.h, p: req.body.p, t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11, fecha: fecha };
+    let new_measurement = { id: req.body.id, t_bmp280: req.body.t, h_bmp280: req.body.h, p_bmp280: req.body.p, t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11, fecha: fecha };
 
-    data[id_measurement] = new_measurement;
-    fs.writeFileSync("data.json", JSON.stringify(data, null, 2));
+    measurenment[id_measurement] = new_measurement;
+    fs.writeFileSync("data.json", JSON.stringify(measurenment, null, 2));
     res.send("received measurement into " + insertedId);
 });
 
@@ -176,33 +179,36 @@ startDatabase().then(async () => {
     try {
 
         if (fs.existsSync("data.json")) {
-            const data = fs.readFileSync("data.json");
-            const list_data = JSON.parse(data);
-            //console.log(list_data);
+            const data = fs.readFileSync("data.json", "utf-8");
 
-            for (let index in list_data) {
-                const measurenment = list_data[index];
+            if (data.trim() !== "") {
+                const list_data = JSON.parse(data);
+                //console.log(list_data);
 
-                const id = measurenment.id;
+                for (let index in list_data) {
+                    const measurenment = list_data[index];
 
-                const t = measurenment.t;
-                const h = measurenment.h;
-                const t_dht11 = measurenment.t_dht11;
-                const h_dht11 = measurenment.h_dht11;
-                const fecha = measurenment.fecha;
+                    const id = measurenment.id;
 
-                if (id == "esp32") {
-                    const p = measurenment.p;
-                    await insertMeasurement({ id: id, t: t, h: h, p: p, t_dht11: t_dht11, h_dht11: h_dht11, fecha: fecha });
-                } else {
-                    await insertMeasurement({ id: id, t: t, h: h });
+                    const t = measurenment.t_bmp280;
+                    const h = measurenment.h_bmp280;
+                    const t_dht11 = measurenment.t_dht11;
+                    const h_dht11 = measurenment.h_dht11;
+                    const fecha = measurenment.fecha;
+
+                    if (id == "esp32") {
+                        const p = measurenment.p_bmp280;
+                        await insertMeasurement({ id: id, t_bmp280: t, h_bmp280: h, p_bmp280: p, t_dht11: t_dht11, h_dht11: h_dht11, fecha: fecha });
+                    } else {
+                        await insertMeasurement({ id: id, t: t, h: h });
+                    }
+
+                    //const add_device = "INSERT INTO devices (device_id, name, key) VALUES ('" + device_id + "', '" + name + "', '" + key + "')";
+                    // db.public.none(add_device);
+
+                    id_measurement = parseInt(index);
+
                 }
-
-                //const add_device = "INSERT INTO devices (device_id, name, key) VALUES ('" + device_id + "', '" + name + "', '" + key + "')";
-                // db.public.none(add_device);
-
-                id_measurement = parseInt(index);
-
             }
 
         }
