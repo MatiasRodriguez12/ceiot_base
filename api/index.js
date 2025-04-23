@@ -10,6 +10,26 @@ const render = require("./render.js");
 
 let database = null;
 const collectionName = "measurements";
+let list_data= {};
+let id_measurement = 0;
+
+function saveHistory() {
+  try {
+    fs.writeFileSync("data.json", JSON.stringify(list_data, null, 2));
+    console.log('JSON guardado correctamente');
+  } catch (error) {
+    console.error('Error al guardar el JSON:', error);
+  }
+}
+
+function handleExit() {
+  saveHistory();
+  process.exit();
+}
+
+process.on('SIGINT', handleExit);   // Manejo de Ctrl+C
+process.on('SIGHUP', handleExit);   // Manejo cuando se cierra el terminal
+process.on('SIGTERM', handleExit);  // Manejo cuando se mata el proceso
 
 async function startDatabase() {
     const uri = "mongodb://localhost:27017/?maxPoolSize=20&w=majority";
@@ -41,7 +61,7 @@ app.use(express.static('spa/static'));
 
 const PORT = 8080;
 
-let id_measurement = 0;
+
 
 app.post('/measurement', function (req, res) {
     -       console.log("device id: " + req.body.id + "  key: " + req.body.key + "  temperature: " + req.body.t + "  humidity: " + req.body.h + "  pressure: " + req.body.p + "  temperature_dht11: " + req.body.t_dht11 + "  humidity_dht11: " + req.body.h_dht11);
@@ -51,20 +71,10 @@ app.post('/measurement', function (req, res) {
 
     const { insertedId } = insertMeasurement({ id: req.body.id, t_bmp280: req.body.t, h_bmp280: req.body.h, p_bmp280: req.body.p, t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11, fecha: fecha });
 
-    let measurenment = {};
-    if (fs.existsSync("data.json")) {
-        const data = fs.readFileSync("data.json", "utf-8");
-
-        if (data.trim() !== "") {
-            measurenment = JSON.parse(data);
-            id_measurement++;
-        }
-    }
-
     let new_measurement = { id: req.body.id, t_bmp280: req.body.t, h_bmp280: req.body.h, p_bmp280: req.body.p, t_dht11: req.body.t_dht11, h_dht11: req.body.h_dht11, fecha: fecha };
+    id_measurement++;
+    list_data[id_measurement] = new_measurement;
 
-    measurenment[id_measurement] = new_measurement;
-    fs.writeFileSync("data.json", JSON.stringify(measurenment, null, 2));
     res.send("received measurement into " + insertedId);
 });
 
@@ -182,7 +192,7 @@ startDatabase().then(async () => {
             const data = fs.readFileSync("data.json", "utf-8");
 
             if (data.trim() !== "") {
-                const list_data = JSON.parse(data);
+                list_data = JSON.parse(data);
                 //console.log(list_data);
 
                 for (let index in list_data) {
@@ -190,13 +200,12 @@ startDatabase().then(async () => {
 
                     const id = measurenment.id;
 
-                    const t = measurenment.t_bmp280;
-                    const h = measurenment.h_bmp280;
-                    const t_dht11 = measurenment.t_dht11;
-                    const h_dht11 = measurenment.h_dht11;
-                    const fecha = measurenment.fecha;
-
                     if (id == "esp32") {
+                        const t = measurenment.t_bmp280;
+                        const h = measurenment.h_bmp280;
+                        const t_dht11 = measurenment.t_dht11;
+                        const h_dht11 = measurenment.h_dht11;
+                        const fecha = measurenment.fecha;
                         const p = measurenment.p_bmp280;
                         await insertMeasurement({ id: id, t_bmp280: t, h_bmp280: h, p_bmp280: p, t_dht11: t_dht11, h_dht11: h_dht11, fecha: fecha });
                     } else {
