@@ -81,27 +81,15 @@ app.post('/measurement', function (req, res) {
 app.post('/device', function (req, res) {
     console.log("device id    : " + req.body.id + " name        : " + req.body.n + " key         : " + req.body.k);
     try {
-        const devices_aux = db.public.query("SELECT * FROM devices");
-        const devices = devices_aux.rows;
-        let flag_device_reg = false;
-        for (let i = 0; i < devices.length; i++) {
+        const device_result = db.public.query("SELECT * FROM devices WHERE name = '" + req.body.n  + "'");
 
-            console.log(devices[i].name);
-            if (req.body.n == devices[i].name) {
-                flag_device_reg = true;
-                break;
-            }
-
-        }
-
-        if (flag_device_reg == false) {
+        if (device_result.rows.length > 0) {
+            res.send("ya registrado");
+            console.log("Dispositivo ya registrado");
+        } else {
             db.public.none("INSERT INTO devices VALUES ('" + req.body.id + "', '" + req.body.n + "', '" + req.body.k + "')");
             res.send("received new device");
             console.log("Nuevo dispositivo registrado");
-        }
-        else {
-            res.send("ya registrado");
-            console.log("Dispositivo ya registrado");
         }
     } catch (error) {
         console.error(error);
