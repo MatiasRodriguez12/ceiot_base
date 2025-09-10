@@ -4,11 +4,12 @@ Descripción del trabajo práctico: consiste en el desarrollo de un módulo de c
 De aquí surge la necesidad de desarrollar un equipo que permita compatibilizar los equipos Victron con la red de domótica provista por la empresa. También se debe desarrollar una aplicación que permita el control y monitoreo de todos los equipos conectados a la red.
 
 Objetivo del ataque: 
-- Interceptar y manipular los comandos destinados a los distintos equipos (Victron se controla con Modbus TCP).
-- Obtener información desde la aplicación (si se encuentra conectado a la red de internet). 
+- Interceptar y manipular los comandos destinados a los distintos equipos (Victron se controla con Modbus TCP), para que los mismos empiecen a presentar fallas y se vea le necesidad de llevarlos a revisión o mantenimiento.
 
 Resolución:
 - Reconnaissance:
+    - Recolección de información de conexión de equipos (esquematicos).
+    - Información de protocolos de comunicación utilizado por la red de domótica y la aplicación.
 - Weaponization:
 - Delivery
 - Exploitation
