@@ -4,7 +4,7 @@ Hacer una copia de este documento para utilizar com plantilla para el ejercicio
 
 ## Alumno
 
-(completar)
+Matías Nahuel Rodriguez
 
 ## Enunciado
 
@@ -13,4 +13,18 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
 
 ## Resolución
 
+- Reconnaissance:
+
+    
+- Weaponization:
+
+- Delivery
+
+- Exploitation
+
+- Installation
+
+- Command and Control
+  
+- Actions on Objectives
 
