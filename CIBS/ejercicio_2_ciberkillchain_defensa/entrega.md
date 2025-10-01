@@ -22,9 +22,13 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
   - Mitigación: se podría desarrollar el equipo de tal manera que implemente una restricción que limite la cantidad de comandos Modbus que puedan ser enviados durante un cierto período de tiempo.
   
 - Installation
-  
+  - Detección: el equipo podría monitorear el tiempo en que cada dispositivo se conecta a su red Wi-Fi. La aplicación legitima solamente se conecta cuando necesite realizar alguna que otra tarea. Por otra parte, atacantes estarían conectandose permanentemente, generando un alerta en estos casos.
+  - Mitigación: se puede implementar un mecanismo que desconecte automaticamente al equipo de su red cuando se transcurra un determinado tiempo.
+    
 - Exploitation
-
+  - Detección: el dispositivo podría tener algun algoritmo de detección de cuando haya 2 o mas dispositivos tratando de enviar comandos de manera simultánea (la aplicación legitima y algun script intruso).
+  - Mitigación: se podría ver si es posible implemetar que el dispositivo solamente acepte conexiones de equipos conocidos, por ejemplo haciendo comprobaciones de MAC o similar.
+  
 - Delivery
 
 - Weaponization
