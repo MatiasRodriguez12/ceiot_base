@@ -22,7 +22,7 @@ Resolución:
 - Delivery
     - A través del ataque pishing se obtienen las credenciales de la red Wi-Fi del dispositivo. El medio elegido para la entrega es via mail, emulando un mensaje proveniente de soporte técnico que conduza al usuario a nuestra pagina web. También nuestro dispositivo que contiene el script debe estar localizado en una zona cercana al motorhome de tal manera que se encuentre dentro del alcance de la red Wi-Fi generado por este.
 - Exploitation
-    - Con las credenciales obtenidas, nuestro dispositivo se conecta a la red de comunicación. Aprovechamos la vulnerabilidad de que el sistema no verifica que equipo está enviando los comandos o peticiones, solamente comprueba que el equipo se encuentre conecrada a la red Wi-Fi generada por el mismo dispositivo y así suplantar la identidad de la aplicación por nuestro script propio.
+    - Con las credenciales obtenidas, nuestro dispositivo se conecta a la red de comunicación. Aprovechamos la vulnerabilidad de que el sistema no verifica que equipo está enviando los comandos o peticiones, solamente comprueba que el equipo se encuentre conectada a la red Wi-Fi generada por el mismo dispositivo y así suplantar la identidad de la aplicación por nuestro script propio.
 - Installation
     - El script correrá en nuestro dispositivo propio, manejando funciones de conexion constante a la red Wi-Fi de la red de domótica e iniciando la ejecución del script una vez establecida la conexión.
 - Command and Control
