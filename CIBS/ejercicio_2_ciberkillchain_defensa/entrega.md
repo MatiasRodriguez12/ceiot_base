@@ -12,19 +12,17 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
 
 
 ## Resolución
-
-- Reconnaissance:
-
-    
-- Weaponization:
-
-- Delivery
-
-- Exploitation
-
-- Installation
-
-- Command and Control
   
 - Actions on Objectives
 
+- Command and Control
+
+- Installation
+- 
+- Exploitation
+
+- Delivery
+
+- Weaponization
+
+- Reconnaissance
