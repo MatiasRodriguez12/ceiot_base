@@ -14,7 +14,7 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
 ## Resolución
   
 - Actions on Objectives
-    - Detección: para evitar comandos que perjudiquen el funcionamiento de los equipos se podría aplicar tecnicas de validación de parámetros antes de enviar el comando. Por ejemplo, si un comando intenta modificar un valor a un estado físicamente imposible o ilógico (desactivar una protección sin una secuencia de confirmación o enviar una lectura de sensor fuera de valores limites por ejemplo), se genera una alerta y se rechaza la acción.
+    - Detección: el dispositivo solamente tomará en consideración comandos que incluyan un hash cifrado. Esto hace que si el comando recibido fue alterado o inyectado de manera externa, el hash no coincidirá, generando un alerta.
     -  Mitigación: los comandos mas sensibles que operan sobre los equipos (apagado o encendido, desactivación de protecciones) solo se ejecutarán si dicho comando viene acompañado de un token seguro generado por la aplicación. Esto agregará una etapa de autenticación a la aplicación.
 
 - Command and Control
@@ -27,7 +27,7 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
     
 - Exploitation
   - Detección: el dispositivo podría tener algun algoritmo de detección de cuando haya 2 o mas dispositivos tratando de enviar comandos de manera simultánea (la aplicación legitima y algun script intruso).
-  - Mitigación: se podría ver si es posible implemetar que el dispositivo solamente acepte conexiones de equipos conocidos, por ejemplo haciendo comprobaciones de MAC o similar.
+  - Mitigación: se podría hacer que el proceso de autenticación entre dispositivo y usuario sea llevada a cabo a través del uso de claves secretas (tanto en el dispositivo como en la aplicación). El dispositivo solamente aceptara conexiones si los mensajes pueden ser descifrado a través de su clave.
   
 - Delivery
   - Detección: se podría monitorear si existen intentos fallidos de conexión a la red Wi-Fi y generar un alerta si un intruso desea vulnerar e ingresar por ataque de fuerza bruta. También se podría llevar un registro de MAC y horarios de conexión en que se conecta un equipo a la red Wi-Fi. Si aparece un nuevo cliente en horarios atipicos se podría generar un alerta.
