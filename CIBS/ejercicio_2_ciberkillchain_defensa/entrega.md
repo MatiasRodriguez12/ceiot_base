@@ -30,7 +30,11 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
   - Mitigación: se podría ver si es posible implemetar que el dispositivo solamente acepte conexiones de equipos conocidos, por ejemplo haciendo comprobaciones de MAC o similar.
   
 - Delivery
-
+  - Detección: se podría monitorear si existen intentos fallidos de conexión a la red Wi-Fi y generar un alerta si un intruso desea vulnerar e ingresar por ataque de fuerza bruta. También se podría llevar un registro de MAC y horarios de conexión en que se conecta un equipo a la red Wi-Fi. Si aparece un nuevo cliente en horarios atipicos se podría generar un alerta.
+  - Mitigación: se podría implementar un proceso de autenticación de dos pasos para ingresar a la red. Ademas de las credenciales, se podría solicitar una confirmacióna través de codigos via SMS o mail.
+    
 - Weaponization
-
+  - Detección: se podria llevar un registro si un cliente realiza una cierta cantidad de peticiones al dispositivo que generan errores, ya sea de sintaxis o de formato. Esto sería un indicador de que alguien esta haciendo prueba y ensayo de los comandos para comunicarse con el dispositivo.
+  - Mitigación: se podría hacer que la comunicación entre dispositivo y aplicación se realice con alguna clase de cifrado. Esto hace que si algun atacante intenta obtener o registrar paquetes de comandos seán mas dificil interpretarlos.
+  
 - Reconnaissance
