@@ -14,7 +14,7 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
 ## Resolución
   
 - Actions on Objectives
-    - Detección: se podría analizar el patrón de los comandos recibidos y qué repercusión tendrían en el sistema antes de ser ejecutados. Por ejemplo, comandos que desactivan protecciones y luego los fuerzan a trabajar en su límite podrían considerarse peligrosos y generar una alerta en su lugar.
+    - Detección: el dispositivo podría evaluar los contenidos de los comandos recibidos, si detecta que viola alguna regla de seguridad del dispostivo (por ejemplo operar sobre registros protegidos) genera un alerta y rechaza el comando.
     -  Mitigación: los comandos más sensibles que operan sobre los equipos (apagado o encendido, desactivación de protecciones) solo se ejecutarán si dicho comando viene acompañado de un token seguro generado por la aplicación. Esto agregará una etapa de autenticación a la aplicación.
 
 - Command and Control
@@ -34,7 +34,7 @@ Desarrollar la defensa en función del ataque planteado en orden inverso, mencio
   - Mitigación: se podría implementar un proceso de autenticación de dos pasos para ingresar a la red. Ademas de las credenciales, se podría solicitar una confirmacióna través de codigos via SMS o mail.
     
 - Weaponization
-  - Detección: se podría llevar una especie de conteo de pedidos o peticiones con comandos erróneos o ilógicos. Si se detecta una gran cantidad de comandos de este tipo en un periodo corto, se genera una alerta.
+  - Detección: se podría llevar una especie de conteo de pedidos o peticiones con comandos erróneos o ilógicos. Si se detecta una gran cantidad de comandos de este tipo en un periodo corto podría ser un indicio de que un atacante esta haciendo pruebas y ensayos sobre los comandos, generando un alerta.
   - Mitigación: se podría hacer que la comunicación entre dispositivo y aplicación se realice con alguna clase de cifrado. Esto hace que si algun atacante intenta obtener o registrar paquetes de comandos seán mas dificil interpretarlos.
   
 - Reconnaissance
